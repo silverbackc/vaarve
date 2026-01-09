@@ -29,8 +29,6 @@ def plot_bad_debt_histogram(bad_debt: pd.DataFrame, nb_bins: int):
     fig, axes = plt.subplots(3, 1, figsize=(14, 12))
     horizons = bad_debt.index
     for i, horizon in enumerate(horizons):
-        print(i)
-        print(horizon)
         ax = axes[i]
         ax.hist(bad_debt.loc[horizon], bins=nb_bins)
         ax.set_title(f"Bad debt histogram at horizon {horizon}D")
@@ -107,7 +105,7 @@ if __name__ == "__main__":
     
     bad_debt_per_trajectory = bad_debt_calculator.calculate_portfolio_bad_debt()
     bad_debt_per_trajectory.index = horizons
-    plot_bad_debt_histogram(bad_debt_per_trajectory, nb_simulations/10)
+    plot_bad_debt_histogram(bad_debt_per_trajectory, int(nb_simulations/10))
 
     confidence_levels = [0.9, 0.95, 0.99]
     vars_df = calculate_var(bad_debt_per_trajectory, confidence_levels, horizons)
