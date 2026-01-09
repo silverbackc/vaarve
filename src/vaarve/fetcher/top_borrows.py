@@ -1,8 +1,9 @@
 import pandas as pd
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from clients.the_graph.client import TheGraphClient
+
+data_path = f"{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}/data"
 
 class TopBorrowsFetcher:
     def __init__(self, first: int = 10):
@@ -17,7 +18,7 @@ class TopBorrowsFetcher:
         borrows = self.get_top_borrows()
         df = pd.DataFrame(borrows)
         df["asset"] = df["asset"].apply(lambda x: x["symbol"])
-        df.to_csv("top_borrows.csv", index=False)
+        df.to_csv(f"{data_path}/top_borrows.csv", index=False)
 
     def get_top_borrows_with_collateral(self):
         res = self.client.query("top_borrows_with_collateral", variables={"first": self.first})
@@ -31,7 +32,7 @@ class TopBorrowsFetcher:
         df["account_id"] = df["account"].apply(lambda x: x["id"])
         df["deposits"] = df["account"].apply(lambda x: x["deposits"])
         df.drop(columns=["account", "asset"], inplace=True)
-        df.to_csv("top_borrows_with_collateral.csv", index=False)
+        df.to_csv(f"{data_path}/top_borrows_with_collateral.csv", index=False)
 
 
 if __name__ == "__main__":

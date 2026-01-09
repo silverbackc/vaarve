@@ -10,6 +10,8 @@ from engine.vol.volatility import Volatility
 from engine.simulation.simulator import Simulator
 from engine.var.var import calculate_var
 
+data_path = f"{os.path.dirname(os.path.abspath(__file__))}/data"
+
 def plot_historical_and_simulated_prices(historical_prices: pd.DataFrame, simulated_prices: pd.DataFrame, asset: str):
     fig = plt.figure(figsize=(10, 5))
     ax = fig.add_subplot(111)
@@ -20,7 +22,7 @@ def plot_historical_and_simulated_prices(historical_prices: pd.DataFrame, simula
     ax.set_ylabel("Price (USD)")
     ax.legend()
     ax.grid(True)
-    fig.savefig(f"{asset}_price_history_last_30_and_simulated.png")
+    fig.savefig(f"{data_path}/plots/{asset}_price_history_last_30_and_simulated.png")
     plt.close()
 
 def plot_bad_debt_histogram(bad_debt: pd.DataFrame, nb_bins: int):
@@ -36,7 +38,7 @@ def plot_bad_debt_histogram(bad_debt: pd.DataFrame, nb_bins: int):
         ax.set_ylabel("Frequency")
         ax.grid(True)
     fig.tight_layout()
-    fig.savefig("bad_debt_histogram.png")
+    fig.savefig(f"{data_path}/plots/bad_debt_histogram.png")
     plt.close()
 
 def plot_centered_log_returns(log_returns: pd.Series, asset: str):
@@ -48,7 +50,7 @@ def plot_centered_log_returns(log_returns: pd.Series, asset: str):
     ax.set_xlabel("Centered log returns")
     ax.set_ylabel("Frequency")
     ax.grid(True)
-    fig.savefig(f"{asset}_centered_log_returns_histogram.png")
+    fig.savefig(f"{data_path}/plots/{asset}_centered_log_returns_histogram.png")
     plt.close()
 
 if __name__ == "__main__":
@@ -67,14 +69,16 @@ if __name__ == "__main__":
         top_tokens = top_markets_fetcher.get_top_markets()
         print(f"Top tokens by supply: {top_tokens}")
 
-    top_borrows = pd.read_csv("top_borrows.csv")
-    print(top_borrows.head(10))
+        top_borrows_fetcher.get_and_store_top_borrows_with_collateral()
+        print("Top borrows with collateral stored")
+
+    top_borrows = pd.read_csv(f"{data_path}/top_borrows.csv")
     print(f"Total borrowed amount (USD): {top_borrows['amountUSD'].sum()}")
     print(top_borrows.groupby("asset")["amountUSD"].sum().sort_values(ascending=False))
 
     # Load price history and compute volatility
     period = 30
-    price_history = pd.read_csv("price_history.csv")
+    price_history = pd.read_csv(f"{data_path}/price_history.csv")
     volatility = Volatility(price_history)
     volatility.calculate_vol_log_returns(period)
     print(f"Total volatility of log returns for the last {period} days:")
@@ -84,7 +88,7 @@ if __name__ == "__main__":
     # Simulate prices for top tokens
     horizons = [1, 7, 14]
     simulator = Simulator(volatility, horizons)
-    nb_simulations = 100
+    nb_simulations = int(os.getenv("SIMULATIONS", 10))
     simulated_prices = simulator.simulate_price(nb_simulations)
 
     weth_sim_prices = simulated_prices["WETH"]
@@ -93,9 +97,7 @@ if __name__ == "__main__":
     plot_historical_and_simulated_prices(price_history, weth_sim_prices_init, "WETH")
 
     # Calculate bad debt for top tokens and top borrows
-    if refresh:
-        top_borrows_fetcher.get_and_store_top_borrows_with_collateral()
-    top_borrows_with_collateral = pd.read_csv("top_borrows_with_collateral.csv")
+    top_borrows_with_collateral = pd.read_csv(f"{data_path}/top_borrows_with_collateral.csv")
     bad_debt_calculator = BadDebtCalculator(top_borrows_with_collateral, simulated_prices, top_tokens)
     current_bad_debt = bad_debt_calculator.calculate_current_bad_debt()
     print(f"Total number of accounts: {len(current_bad_debt)}")
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     
     bad_debt_per_trajectory = bad_debt_calculator.calculate_portfolio_bad_debt()
     bad_debt_per_trajectory.index = horizons
-    plot_bad_debt_histogram(bad_debt_per_trajectory, 100)
+    plot_bad_debt_histogram(bad_debt_per_trajectory, nb_simulations/10)
 
     confidence_levels = [0.9, 0.95, 0.99]
     vars_df = calculate_var(bad_debt_per_trajectory, confidence_levels, horizons)

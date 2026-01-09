@@ -2,9 +2,10 @@ import pandas as pd
 import time
 from typing import Optional
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from clients import CoingeckoClient
+
+data_path = f"{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}/data"
 
 cg_mapping = {
     "WETH": "ethereum",
@@ -32,8 +33,4 @@ class PriceFetcher:
             res = self.client.get_price_history(cg_mapping[symbol])
             time.sleep(1)
             df[symbol] = [row[1] for row in res]
-        df.to_csv("price_history.csv", index=False)
-
-if __name__ == "__main__":
-    fetcher = PriceFetcher(["WETH", "USDT", "USDC"])
-    fetcher.get_and_store_price_history()
+        df.to_csv(f"{data_path}/price_history.csv", index=False)
