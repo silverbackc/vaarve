@@ -113,11 +113,11 @@ if __name__ == "__main__":
     bad_debt_calculator = BadDebtCalculator(top_borrows_with_collateral, simulated_prices, top_tokens)
     current_bad_debt = bad_debt_calculator.calculate_current_bad_debt()
     print(f"Total number of accounts: {len(current_bad_debt)}")
-    print(f"Total bad debt: {current_bad_debt.sum()}")
-    filtered_current_bad_debt = current_bad_debt[current_bad_debt > 0]
+    print(f"Total bad debt: {current_bad_debt['bad_debt'].sum()}")
+    filtered_current_bad_debt = current_bad_debt[current_bad_debt['bad_debt'] > 0]
     print(f"Number of accounts with bad debt: {len(filtered_current_bad_debt)}")
-    
-    bad_debt_per_trajectory = bad_debt_calculator.calculate_portfolio_bad_debt()
+    accounts_to_exclude = filtered_current_bad_debt["account_id"].tolist()
+    bad_debt_per_trajectory = bad_debt_calculator.calculate_portfolio_bad_debt(accounts_to_exclude)
     bad_debt_per_trajectory.index = horizons
     plot_bad_debt_histogram(bad_debt_per_trajectory, int(nb_simulations/5))
 

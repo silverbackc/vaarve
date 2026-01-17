@@ -1,7 +1,9 @@
 import requests
 import os
-from .queries import queries
 from dotenv import load_dotenv
+import pandas as pd
+
+from .queries import queries
 
 load_dotenv()
 
@@ -33,4 +35,7 @@ class TheGraphClient:
 
     def get_top_assets(self, first: int = 10):
         res = self.query("top_markets", variables={"first": first})
-        return [market["inputToken"]["symbol"] for market in res["data"]["markets"]]
+        df = pd.DataFrame(res["data"]["markets"])
+        df["symbol"] = df["inputToken"].apply(lambda x: x["symbol"])
+        df["liquidation_threshold"] = df["liquidationThreshold"]
+        return df[["symbol", "liquidation_threshold"]]

@@ -29,12 +29,13 @@ Bad debt is calculated as:
 ```
 badDebt = Σ max(userDebt - userCollateral, 0)
 ```
+Before the calculation, we exclude accounts with a health factor below 1 as these would be liquidated by the protocol.
 
 For each simulated price trajectory, we compute the corresponding bad debt value, generating a comprehensive distribution of potential outcomes:
 
 ![Distribution of Bad Debt](src/vaarve/data/plots/bad_debt_histogram.png)
 
-From this distribution, we extract VaR metrics at various confidence levels using percentile analysis. For instance, the **95% 1-day VaR** is approximately **$3.1 billion**, meaning there's a 5% probability that protocol losses could exceed this threshold within a single day.
+From this distribution, we extract VaR metrics at various confidence levels using percentile analysis. For instance, the **95% 1-day VaR** is approximately **$1.86 billion**, meaning there's a 5% probability that protocol losses could exceed this threshold within a single day.
 
 ## Running the Project
 
